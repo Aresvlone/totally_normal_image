@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="TotallyNormalImage — A modern web-based steganography tool using Image LSB method. Hide secret messages and files inside images securely with optional AES encryption."
+    />
+    <meta
+      name="keywords"
+      content="steganography, LSB, image steganography, cryptography, network security, CNS, hide message in image, hide file in image"
+    />
+    <meta name="author" content="TotallyNormalImage" />
+    <title>TotallyNormalImage — Image LSB Steganography Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Three.js (Required for WebGL Background) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Anime.js v3 — Scroll Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  </head>
+  <body>
+    <!-- WebGL Neon Beam Background -->
+    <div id="webgl-bg" aria-hidden="true"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+      <div class="nav-container">
+        <a href="#hero" class="nav-logo">
+          <img src="logo.jpg" alt="TotallyNormalImage" class="nav-logo-img" />
+        </a>
+        <ul class="nav-links">
+          <li><a href="#hero" class="nav-link active">Home</a></li>
+          <li><a href="#tool" class="nav-link">Tool</a></li>
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+        </ul>
+        <button
+          class="mobile-menu-btn"
+          id="mobileMenuBtn"
+          aria-label="Toggle menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+      <div class="hero-content">
+        <div class="hero-badge">🛡️ Cryptography & Network Security</div>
+        <h1 class="hero-title">
+          Hide Secrets in
+          <span class="gradient-text">Plain Sight</span>
+        </h1>
+        <p class="hero-subtitle">
+          A powerful steganography tool that conceals your secret messages
+          and files within images using the
+          <strong>Least Significant Bit (LSB)</strong> technique — undetectable
+          to the human eye.
+        </p>
+        <div class="hero-actions">
+          <a href="#tool" class="btn btn-primary" id="heroEncodeBtn">
+            <span class="btn-icon">🔒</span> Start Encoding
+          </a>
+          <a href="#how-it-works" class="btn btn-secondary">
+            <span class="btn-icon">📖</span> Learn More
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-value">256-bit</span>
+            <span class="stat-label">AES Encryption</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">LSB</span>
+            <span class="stat-label">Steganography</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">100%</span>
+            <span class="stat-label">Client-Side</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="visual-card">
+          <div class="pixel-grid" id="pixelGrid"></div>
+          <div class="visual-label">LSB Encoding Visualization</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tool Section -->
+    <section id="tool">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-badge">🔧 Tool</span>
+          <h2 class="section-title">
+            Steganography <span class="gradient-text">Workbench</span>
+          </h2>
+          <p class="section-desc">
+            Encode your secret messages into images or decode hidden messages
+            from steganographic images.
+          </p>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle" id="modeToggle">
+          <button class="mode-btn active" data-mode="encode" id="encodeModeBtn">
+            <span class="mode-icon">🔒</span>
+            <span>Encode</span>
+          </button>
+          <button class="mode-btn" data-mode="decode" id="decodeModeBtn">
+            <span class="mode-icon">🔓</span>
+            <span>Decode</span>
+          </button>
+          <div class="mode-slider"></div>
+        </div>
+
+        <!-- Encode Panel -->
+        <div class="tool-panel active" id="encodePanel">
+          <div class="tool-grid">
+            <div class="tool-input-area">
+              <!-- Image Upload -->
+              <div class="upload-zone" id="encodeUploadZone">
+                <input
+                  type="file"
+                  id="encodeImageInput"
+                  accept="image/*"
+                  hidden
+                />
+                <div class="upload-content" id="encodeUploadContent">
+                  <div class="upload-icon">🖼️</div>
+                  <h3>Drop your cover image here</h3>
+                  <p>or click to browse — PNG, JPG, BMP supported</p>
+                  <span class="upload-hint"
+                    >For best results, use a PNG image with rich colors</span
+                  >
+                </div>
+                <div
+                  class="upload-preview"
+                  id="encodePreview"
+                  style="display: none"
+                >
+                  <img id="encodePreviewImg" alt="Cover image preview" />
+                  <button
+                    class="remove-image-btn"
+                    id="removeEncodeImage"
+                    title="Remove image"
+                  >
+                    ✕
+                  </button>
+                  <div class="image-info" id="encodeImageInfo"></div>
+                </div>
+              </div>
+
+              <!-- Hide Type Toggle -->
+              <div class="hide-type-toggle" id="hideTypeToggle">
+                <button class="hide-type-btn active" data-type="message" id="hideMessageBtn">
+                  <span class="mode-icon">💬</span>
+                  <span>Message</span>
+                </button>
+                <button class="hide-type-btn" data-type="file" id="hideFileBtn">
+                  <span class="mode-icon">📁</span>
+                  <span>File</span>
+                </button>
+                <div class="hide-type-slider"></div>
+              </div>
+
+              <!-- Message Input -->
+              <div class="input-group" id="messageInputGroup">
+                <label for="secretMessage">
+                  <span class="label-icon">💬</span> Secret Message
+                </label>
+                <textarea
+                  id="secretMessage"
+                  placeholder="Type your secret message here..."
+                  rows="5"
+                  maxlength="50000"
+                ></textarea>
+                <div class="char-counter">
+                  <span id="charCount">0</span> /
+                  <span id="maxChars">—</span> characters
+                </div>
+              </div>
+
+              <!-- File Input (hidden by default) -->
+              <div class="input-group" id="fileInputGroup" style="display: none">
+                <label>
+                  <span class="label-icon">📁</span> Secret File
+                  <span class="optional-tag">(Any file type)</span>
+                </label>
+                <div class="upload-zone upload-zone-sm" id="secretFileUploadZone">
+                  <input type="file" id="secretFileInput" hidden />
+                  <div class="upload-content" id="secretFileUploadContent">
+                    <div class="upload-icon">📎</div>
+                    <h3>Drop your secret file here</h3>
+                    <p>or click to browse — any file type supported</p>
+                  </div>
+                  <div class="upload-preview file-preview" id="secretFilePreview" style="display: none">
+                    <div class="file-info-display">
+                      <span class="file-icon-large">📄</span>
+                      <div class="file-details">
+                        <span class="file-name" id="secretFileName">—</span>
+                        <span class="file-size" id="secretFileSize">—</span>
+                      </div>
+                      <button class="remove-image-btn" id="removeSecretFile" title="Remove file">✕</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="char-counter">
+                  <span id="fileCapacityInfo">Select a cover image to see max file size</span>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="input-group">
+                <label for="encodePassword">
+                  <span class="label-icon">🔑</span> Password
+                  <span class="optional-tag">(Optional — AES-256)</span>
+                </label>
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    id="encodePassword"
+                    placeholder="Add a password for extra security..."
+                  />
+                  <button
+                    class="toggle-password"
+                    id="toggleEncodePassword"
+                    type="button"
+                    aria-label="Toggle password visibility"
+                  >
+                    <span class="eye-icon">👁️</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Encode Button -->
+              <button class="btn btn-primary btn-full" id="encodeBtn" disabled>
+                <span class="btn-icon">🔒</span>
+                <span>Encode & Hide</span>
+              </button>
+            </div>
+
+            <!-- Output Area -->
+            <div class="tool-output-area">
+              <div class="output-placeholder" id="encodePlaceholder">
+                <div class="placeholder-icon">🎨</div>
+                <h3>Encoded Image Preview</h3>
+                <p>Your steganographic image will appear here after encoding</p>
+              </div>
+              <div
+                class="output-result"
+                id="encodeResult"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <span class="result-badge success"
+                    >✅ Encoded Successfully</span
+                  >
+                </div>
+                <div class="result-image-wrapper">
+                  <canvas id="encodedCanvas"></canvas>
+                </div>
+                <div class="result-info" id="encodeResultInfo"></div>
+                <button class="btn btn-primary btn-full" id="downloadBtn">
+                  <span class="btn-icon">⬇️</span>
+                  <span>Download Encoded Image</span>
+                </button>
+                <div class="result-comparison" id="comparisonSection">
+                  <h4>🔍 Visual Comparison</h4>
+                  <p class="comparison-note">
+                    Can you spot the difference? The encoded image is visually
+                    identical!
+                  </p>
+                  <div class="comparison-grid">
+                    <div class="comparison-item">
+                      <img id="comparisonOriginal" alt="Original image" />
+                      <span>Original</span>
+                    </div>
+                    <div class="comparison-item">
+                      <img id="comparisonEncoded" alt="Encoded image" />
+                      <span>Encoded</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decode Panel -->
+        <div class="tool-panel" id="decodePanel">
+          <div class="tool-grid">
+            <div class="tool-input-area">
+              <!-- Image Upload -->
+              <div class="upload-zone" id="decodeUploadZone">
+                <input
+                  type="file"
+                  id="decodeImageInput"
+                  accept="image/png"
+                  hidden
+                />
+                <div class="upload-content" id="decodeUploadContent">
+                  <div class="upload-icon">🔍</div>
+                  <h3>Drop the encoded image here</h3>
+                  <p>or click to browse — PNG format only</p>
+                  <span class="upload-hint"
+                    >Only PNG images preserve hidden data losslessly</span
+                  >
+                </div>
+                <div
+                  class="upload-preview"
+                  id="decodePreview"
+                  style="display: none"
+                >
+                  <img id="decodePreviewImg" alt="Decode image preview" />
+                  <button
+                    class="remove-image-btn"
+                    id="removeDecodeImage"
+                    title="Remove image"
+                  >
+                    ✕
+                  </button>
+                  <div class="image-info" id="decodeImageInfo"></div>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="input-group">
+                <label for="decodePassword">
+                  <span class="label-icon">🔑</span> Password
+                  <span class="optional-tag">(If encrypted)</span>
+                </label>
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    id="decodePassword"
+                    placeholder="Enter password if message was encrypted..."
+                  />
+                  <button
+                    class="toggle-password"
+                    id="toggleDecodePassword"
+                    type="button"
+                    aria-label="Toggle password visibility"
+                  >
+                    <span class="eye-icon">👁️</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Decode Button -->
+              <button class="btn btn-primary btn-full" id="decodeBtn" disabled>
+                <span class="btn-icon">🔓</span>
+                <span>Decode Message</span>
+              </button>
+            </div>
+
+            <!-- Output Area -->
+            <div class="tool-output-area">
+              <div class="output-placeholder" id="decodePlaceholder">
+                <div class="placeholder-icon">📨</div>
+                <h3>Decoded Message</h3>
+                <p>The hidden message will appear here after decoding</p>
+              </div>
+              <div
+                class="output-result"
+                id="decodeResult"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <span class="result-badge success" id="decodeResultBadge">✅ Message Decoded</span>
+                </div>
+                <!-- Text message result -->
+                <div id="decodeMessageResult">
+                  <div class="decoded-message-wrapper">
+                    <div class="decoded-message" id="decodedMessage"></div>
+                    <button
+                      class="copy-btn"
+                      id="copyDecodedBtn"
+                      title="Copy message"
+                    >
+                      📋 Copy
+                    </button>
+                  </div>
+                </div>
+                <!-- File result -->
+                <div id="decodeFileResult" style="display: none">
+                  <div class="decoded-file-wrapper">
+                    <div class="file-info-display decoded-file-info">
+                      <span class="file-icon-large">📄</span>
+                      <div class="file-details">
+                        <span class="file-name" id="decodedFileName">—</span>
+                        <span class="file-size" id="decodedFileSize">—</span>
+                      </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="downloadDecodedFileBtn">
+                      <span class="btn-icon">⬇️</span>
+                      <span>Download Extracted File</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="result-info" id="decodeResultInfo"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-badge">✨ Features</span>
+          <h2 class="section-title">
+            Why <span class="gradient-text">TotallyNormalImage</span>?
+          </h2>
+          <p class="section-desc">
+            A comprehensive steganography solution built with security and
+            usability in mind.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>AES-256 Encryption</h3>
+            <p>
+              Optional password protection using industry-standard AES-256
+              encryption before LSB embedding for double-layered security.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📁</div>
+            <h3>Hide Any File</h3>
+            <p>
+              Conceal any file type — PDFs, ZIPs, documents, executables — inside
+              an ordinary-looking image. No file type restrictions.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3>100% Client-Side</h3>
+            <p>
+              All processing happens in your browser. No data is ever uploaded
+              to any server — your secrets stay with you.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">👁️</div>
+            <h3>Visually Undetectable</h3>
+            <p>
+              LSB modification changes pixel values by at most ±1, making the
+              encoded image indistinguishable from the original.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Fully Responsive</h3>
+            <p>
+              Works seamlessly on desktops, tablets, and mobile devices.
+              Steganography on the go.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Lightning Fast</h3>
+            <p>
+              Optimized pixel manipulation using HTML5 Canvas API for real-time
+              encoding and decoding.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📚</div>
+            <h3>Educational</h3>
+            <p>
+              Built-in interactive demos and explanations to help you understand
+              how LSB steganography works.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About / Technical Section -->
+    <section id="about">
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-badge">📋 About</span>
+          <h2 class="section-title">
+            Technical <span class="gradient-text">Details</span>
+          </h2>
+          <p class="section-desc">
+            The technology and methodology behind TotallyNormalImage.
+          </p>
+        </div>
+
+        <div class="about-grid about-grid--single">
+          <div class="about-card">
+            <h3>🎓 Project Information</h3>
+            <div class="project-info">
+              <div class="info-row">
+                <span class="info-label">Subject</span>
+                <span class="info-value"
+                  >Cryptography & Network Security (CNS)</span
+                >
+              </div>
+              <div class="info-row">
+                <span class="info-label">Technique</span>
+                <span class="info-value">Image LSB Steganography</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Encryption</span>
+                <span class="info-value">AES-256-GCM (Optional)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Processing</span>
+                <span class="info-value">100% Client-Side (Browser)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <div class="footer-container">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <img src="logo.jpg" alt="TotallyNormalImage" class="footer-logo-img" />
+            <p>
+              Secure steganography in your browser. Hide messages in plain sight
+              using the LSB technique.
+            </p>
+          </div>
+          <div class="footer-links-group">
+            <h4>Quick Links</h4>
+            <a href="#tool">Encode / Decode</a>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+          </div>
+          <div class="footer-links-group">
+            <h4>Resources</h4>
+            <a
+              href="https://en.wikipedia.org/wiki/Steganography"
+              target="_blank"
+              rel="noopener"
+              >Wikipedia: Steganography</a
+            >
+            <a
+              href="https://en.wikipedia.org/wiki/Bit_numbering#LSb_0_bit_numbering"
+              target="_blank"
+              rel="noopener"
+              >LSB Explained</a
+            >
+            <a
+              href="https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto"
+              target="_blank"
+              rel="noopener"
+              >Web Crypto API</a
+            >
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            © 2026 TotallyNormalImage — A CNS Project. Built with 💜 for academic
+            purposes.
+          </p>
+          <p class="footer-disclaimer">
+            ⚠️ This tool is for educational purposes only. Use responsibly.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">Processing...</p>
+      </div>
+    </div>
+
+    <script src="crypto.js"></script>
+    <script src="steganography.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
