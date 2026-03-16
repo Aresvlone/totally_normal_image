@@ -114,82 +114,111 @@
     // ============================================================
     function initWebGLBackground() {
         const container = document.getElementById('webgl-bg');
-        if (!container || typeof THREE === 'undefined') return;
+        if (!container) return;
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const renderer = new THREE.WebGLRenderer({ alpha: false });
-
-        const vertexShader = `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-
-        const fragmentShader = `
-            uniform float u_time;
-            uniform vec2 u_resolution;
-            varying vec2 vUv;
-
-            void main() {
-                vec2 uv = vUv;
-                float aspect = u_resolution.x / u_resolution.y;
-
-                vec3 color = vec3(0.0);
-
-                float x = uv.x;
-
-                float y = 0.5 + 0.1 * sin(x * 6.0 + u_time * 1.5) + 0.05 * sin(x * 12.0 + u_time * 2.5);
-                float dist = abs(uv.y - y);
-                float glow = 0.02 / (dist + 0.001);
-
-                float y2 = 0.5 + 0.12 * sin(x * 6.0 + u_time * 1.5 + 0.5);
-                float dist2 = abs(uv.y - y2);
-                float glow2 = 0.02 / (dist2 + 0.002);
-
-                vec3 beamColor = 0.5 + 0.5 * cos(u_time * 0.5 + x * 3.0 + vec3(0, 2, 4));
-
-                color += beamColor * glow * 1.5;
-                color += beamColor * glow2 * 0.8;
-
-                color += vec3(0.0, 0.05, 0.1) * (1.0 - uv.y) * 0.5;
-
-                gl_FragColor = vec4(color, 1.0);
-            }
-        `;
-
-        const material = new THREE.ShaderMaterial({
-            vertexShader,
-            fragmentShader,
-            uniforms: {
-                u_time: { value: 0.0 },
-                u_resolution: { value: new THREE.Vector2() }
-            }
-        });
-
-        const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
-        scene.add(plane);
-
-        function handleResize() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            renderer.setSize(w, h);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            material.uniforms.u_resolution.value.set(w, h);
+        // If THREE hasn't loaded yet (CDN race condition in production builds),
+        // retry every 100ms for up to 5 seconds
+        if (typeof THREE === 'undefined') {
+            let retries = 0;
+            const maxRetries = 50;
+            const retryInterval = setInterval(() => {
+                retries++;
+                if (typeof THREE !== 'undefined') {
+                    clearInterval(retryInterval);
+                    createWebGLScene(container);
+                } else if (retries >= maxRetries) {
+                    clearInterval(retryInterval);
+                    console.warn('Three.js failed to load from CDN — falling back to CSS background.');
+                    // Apply a CSS gradient fallback so the bg isn't just plain black
+                    container.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(30,20,50,1) 0%, rgba(10,10,15,1) 100%)';
+                }
+            }, 100);
+            return;
         }
 
-        container.appendChild(renderer.domElement);
-        handleResize();
-        window.addEventListener('resize', handleResize);
+        createWebGLScene(container);
+    }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            material.uniforms.u_time.value += 0.01;
-            renderer.render(scene, camera);
+    function createWebGLScene(container) {
+        try {
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            const renderer = new THREE.WebGLRenderer({ alpha: false });
+
+            const vertexShader = `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 1.0);
+                }
+            `;
+
+            const fragmentShader = `
+                uniform float u_time;
+                uniform vec2 u_resolution;
+                varying vec2 vUv;
+
+                void main() {
+                    vec2 uv = vUv;
+                    float aspect = u_resolution.x / u_resolution.y;
+
+                    vec3 color = vec3(0.0);
+
+                    float x = uv.x;
+
+                    float y = 0.5 + 0.1 * sin(x * 6.0 + u_time * 1.5) + 0.05 * sin(x * 12.0 + u_time * 2.5);
+                    float dist = abs(uv.y - y);
+                    float glow = 0.02 / (dist + 0.001);
+
+                    float y2 = 0.5 + 0.12 * sin(x * 6.0 + u_time * 1.5 + 0.5);
+                    float dist2 = abs(uv.y - y2);
+                    float glow2 = 0.02 / (dist2 + 0.002);
+
+                    vec3 beamColor = 0.5 + 0.5 * cos(u_time * 0.5 + x * 3.0 + vec3(0, 2, 4));
+
+                    color += beamColor * glow * 1.5;
+                    color += beamColor * glow2 * 0.8;
+
+                    color += vec3(0.0, 0.05, 0.1) * (1.0 - uv.y) * 0.5;
+
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+
+            const material = new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader,
+                uniforms: {
+                    u_time: { value: 0.0 },
+                    u_resolution: { value: new THREE.Vector2() }
+                }
+            });
+
+            const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+            scene.add(plane);
+
+            function handleResize() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                renderer.setSize(w, h);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                material.uniforms.u_resolution.value.set(w, h);
+            }
+
+            container.appendChild(renderer.domElement);
+            handleResize();
+            window.addEventListener('resize', handleResize);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                material.uniforms.u_time.value += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        } catch (err) {
+            console.error('WebGL background failed:', err);
+            container.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(30,20,50,1) 0%, rgba(10,10,15,1) 100%)';
         }
-        animate();
     }
 
     // ============================================================
